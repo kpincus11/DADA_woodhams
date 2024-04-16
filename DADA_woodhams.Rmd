@@ -1,0 +1,53 @@
+---
+title: "Woodhams_DADA"
+output: html_document
+date: "2024-03-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library("dada2")
+path <- "~/fast.q"
+list.files("fast.q")
+
+#forward files
+fnfs<- sort(list.files("fast.q", pattern="_R1_001.fastq", full.names = TRUE))
+
+#reverse files
+fnrs<- sort(list.files("fast.q", pattern = "_R2_001.fastq", full.names = TRUE))
+
+#extract the sample names
+sample.names<- sapply(strsplit(basename(fnfs), "_"), '[', 1)
+head(sample.names)
+
+#visualize
+plotQualityProfile(fnfs[1:2])
+plotQualityProfile(fnrs[1:2])
+
+#move filtered ones to subdirectory
+filtFs<- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs<- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+
+#fiolter/truncate
+##am I doing this part right I have wayyy fewer reads and it seems like the beginning is where the quality os bad more so than the end
+out<- filterAndTrim(fnfs, filtFs, fnrs, filtRs, truncLen = c(130, 130), maxN = 0, maxEE = c(2, 2), truncQ=2, rm.phix = TRUE, compress = TRUE, multithread = TRUE)
+head(out)
+
+
+```
+##Error Rates
+```{r}
+#this wopnt work? :(
+errF<- learnErrors(filtFs, multithread = T)
+errR<- learnErrors(fnrs, multithread = T)
+```
+
+
+
+
+
